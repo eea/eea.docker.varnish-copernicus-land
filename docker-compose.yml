@@ -1,0 +1,28 @@
+version: "2"
+
+services:
+
+  varnish:
+    image: eeacms/varnish-copernicus-land:1.0
+    links:
+    - haproxy
+    environment:
+      VARNISH_BACKEND_PORT: 5000
+      VARNISH_BACKEND_HOST: haproxy
+      VARNISH_MEMORY: 512M
+
+  haproxy:
+    image: eeacms/haproxy
+    links:
+    - webapp
+    ports:
+    - "80:5000"
+    - "1936:1936"
+    environment:
+    - SERVICE_NAMES=webapp
+    - BACKENDS_PORT=8080
+
+  webapp:
+    image: eeacms/hello
+    environment:
+    - PORT=8080
