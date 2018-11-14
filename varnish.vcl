@@ -177,8 +177,8 @@ sub vcl_backend_response {
 
     set beresp.http.Vary = "X-Anonymous,Accept-Encoding";
 
-    # Only cache css/js/image content types
-    if (beresp.http.Content-Type !~ "application/javascript|application/x-javascript|text/css|image/*") {
+    # Only cache css/js/image content types and custom specified content types
+    if (beresp.http.Content-Type !~ "application/javascript|application/x-javascript|text/css|image/*|${VARNISH_CACHE_CTYPES}") {
         unset beresp.http.Cache-Control;
         set beresp.http.Cache-Control = "no-cache, max-age=0, must-revalidate";
         set beresp.ttl = 0s;

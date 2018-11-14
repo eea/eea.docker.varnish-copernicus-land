@@ -1,8 +1,8 @@
-#!/bin/sh
+#!/bin/bash
 
-# Convert environment variables in the conf to fixed entries
-for name in VARNISH_BACKEND_PORT VARNISH_BACKEND_HOST
-do
+# add all environment variables that contain varnish within varnish config
+env | awk -F = '$1 ~ /^VARNISH/ { print $1 }' |
+while read name; do
     eval value=\$$name
     sed -i "s|\${${name}}|${value}|g" /etc/varnish/default.vcl
 done
