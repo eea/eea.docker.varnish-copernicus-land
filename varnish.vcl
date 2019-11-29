@@ -1,31 +1,44 @@
 vcl 4.0;
 
-import std;
-
-# configure all backends
-backend backend_000 {
-   .host = "${VARNISH_BACKEND_HOST}";
-   .port = "${VARNISH_BACKEND_PORT}";
-   .connect_timeout = 0.3s;
-   .first_byte_timeout = 300s;
-   .between_bytes_timeout  = 60s;
-}
-
-
-sub vcl_init {
-
-}
-
 acl purge {
-    "127.0.0.1";
     "localhost";
-    "172.17.0.0/16";
-    "10.42.0.0/16";
+    "127.0.0.1";
+    "172.17.0.0/16"; # Docker network
+    "10.42.0.0/16";  # Rancher network
+    "10.62.0.0/16";  # Rancher network
+    "10.120.10.0/24"; # Internal networks
+    "10.120.20.0/24"; # Internal networks
+    "10.120.30.0/24"; # Internal networks
 }
 
 sub vcl_recv {
 
-    set req.backend_hint = backend_000;
+
+    # Before anything else we need to fix gzip compression
+    if (req.http.Accept-Encoding) {
+        if (req.url ~ "\.(jpg|png|gif|gz|tgz|bz2|tbz|mp3|ogg)$") {
+            # No point in compressing these
+            unset req.http.Accept-Encoding;
+        } else if (req.http.Accept-Encoding ~ "br") {
+            set req.http.Accept-Encoding = "br";
+        } else if (req.http.Accept-Encoding ~ "gzip") {
+            set req.http.Accept-Encoding = "gzip";
+        } else if (req.http.Accept-Encoding ~ "deflate") {
+            set req.http.Accept-Encoding = "deflate";
+        } else {
+            # unknown algorithm
+            unset req.http.Accept-Encoding;
+        }
+    }
+
+    if (req.http.X-Forwarded-Proto == "https" ) {
+        set req.http.X-Forwarded-Port = "443";
+    } else {
+        set req.http.X-Forwarded-Port = "80";
+        set req.http.X-Forwarded-Proto = "http";
+    }
+
+    set req.backend_hint = server_haproxy_0;
 
     if (req.method == "PURGE") {
         # Not from an allowed IP? Then die with an error.
