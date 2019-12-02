@@ -1,24 +1,14 @@
-FROM debian:jessie-slim
+FROM eeacms/varnish:4.1-6.3
 MAINTAINER "EEA: IDM2 C-TEAM" <eea-edw-c-team-alerts@googlegroups.com>
 
-# Add script that starts varnish.
-ADD docker-entrypoint.sh /docker-entrypoint.sh
 
-# Update the package repository and install varnish.
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends varnish && \
-    rm -r /var/lib/apt/lists/* && \
-    chmod 755 /docker-entrypoint.sh
 
-# Make our default VCL available on the container.
-ADD varnish.vcl /etc/varnish/default.vcl
+ENV  CACHE_SIZE="100M" \
+     PARAM_VALUE="-p thread_pool_min=100 -p thread_pool_max=1000 -p thread_pool_timeout=300 -p lru_interval=1800 -p max_restarts=6 -p http_range_support=on -p http_max_hdr=128 -p http_req_hdr_len=20000 -p http_resp_hdr_len=20000" \
+     BACKENDS="haproxy" \
+     BACKENDS_PORT="5000" \
+     BACKENDS_PROBE_ENABLED="false"
 
-# Configure the backend.
-ENV VARNISH_BACKEND_PORT 5000
-ENV VARNISH_BACKEND_HOST 127.0.0.1
-ENV VARNISH_MEMORY 100M
+COPY varnish.vcl /etc/varnish/conf.d/
+     
 
-# Expose HTTP port
-EXPOSE 80
-
-ENTRYPOINT ["./docker-entrypoint.sh"]
