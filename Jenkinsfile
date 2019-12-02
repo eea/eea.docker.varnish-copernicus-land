@@ -15,7 +15,7 @@ pipeline {
               checkout scm
               sh '''docker build -t ${BUILD_TAG,,} .'''
               sh '''TMPDIR=`pwd` clair-scanner --ip=`hostname` --clair=http://clair:6060 -t=Critical ${BUILD_TAG,,}'''
-              sh '''docker run -i --name=${BUILD_TAG,,} --add-host=haproxy:10.0.0.1 sh -c "varnishd -C -f /etc/varnish/default.vcl"'''
+              sh '''docker run -i --name=${BUILD_TAG,,} --add-host=haproxy:10.0.0.1 ${BUILD_TAG,,} sh -c "varnishd -C -f /etc/varnish/default.vcl"'''
             } finally {
               sh '''docker rm -v ${BUILD_TAG,,}'''
               sh '''docker rmi ${BUILD_TAG,,}'''
