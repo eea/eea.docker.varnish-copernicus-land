@@ -1,4 +1,4 @@
-FROM eeacms/varnish:4.1-6.3
+FROM eeacms/varnish:4.1-6.5
 MAINTAINER "EEA: IDM2 C-TEAM" <eea-edw-c-team-alerts@googlegroups.com>
 
 
